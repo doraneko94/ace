@@ -2,6 +2,8 @@ import pygame
 from .consts import *
 from .structs import *
 
+# test
+
 def run_battle(module_pyr, module_com):
     pygame.init()
     screen = pygame.display.set_mode((sizeX, sizeY))
