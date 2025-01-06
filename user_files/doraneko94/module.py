@@ -14,7 +14,7 @@ class Fighter:
     def launch(self):
         _, outputs = self.core.sense()
         for output in outputs:
-            if output.unit == 0:
+            if output.unit == 1:
                 return True
         return False
     
@@ -26,6 +26,6 @@ class Missile:
         position, outputs = self.core.sense()
         direction = 0.0
         for output in outputs:
-            if output.unit == 0:
+            if output.unit == 1:
                 direction = math.atan2(output.x, output.y) * 180 / math.pi
         return direction

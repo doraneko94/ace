@@ -5,7 +5,7 @@ class Fighter:
         self.core = core
 
     def move(self):
-        return 0.5, 45
+        return 0, 0
     
     def launch(self):
         return True
