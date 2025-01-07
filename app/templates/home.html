@@ -1,7 +1,26 @@
-<form method="POST" enctype="multipart/form-data">
-    <input type="file" name="file">
-    <button type="submit">Upload</button>
-</form>
-<form method="POST">
-    <button name="start_battle" value="1">Start Battle</button>
-</form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+</head>
+<body>
+    <h1>Welcome to the Game</h1>
+    <form method="POST" enctype="multipart/form-data">
+        <label for="file">Upload your module.py:</label>
+        <input type="file" id="file", name="file" accept=".py" required>
+        <button type="submit">Upload</button>
+    </form>
+
+    <hr>
+
+    <form action="/battle" method="GET">
+        <button type="submit">Start Battle</button>
+    </form>
+
+    <hr>
+
+    <a href="/logout">Logout</a>
+</body>
+</html>

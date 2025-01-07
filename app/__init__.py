@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_socketio import SocketIO
 import os
 
 app = Flask(__name__)
@@ -11,6 +12,7 @@ app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 from app.models import User
 

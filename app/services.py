@@ -3,6 +3,7 @@ import shutil
 from importlib import import_module
 from app.models import User
 from app import db
+from game.engine import Engine
 
 K = 32
 
@@ -12,6 +13,15 @@ def save_uploaded_file(file, user_name):
         shutil.rmtree(user_folder)
     os.makedirs(user_folder, exist_ok=True)
     file.save(os.path.join(user_folder, "module.py"))
+
+def start_session(user_id):
+    module_pyr_path = f"user_files.{User.query.get(user_id).username}.module"
+    user_id_com = select_random_opponent(user_id)
+    module_com_path = f"user_files.{User.query.get(user_id_com).username}.module"
+    engine = Engine(module_pyr_path, module_com_path)
+    for step_result in engine.run_game():
+        yield step_result
+    update_user_rating(user_id, user_id_com, engine.pyr_wins)
 
 def start_battle(user_id):
     module_pyr = import_module(f"user_files.{User.query.get(user_id).username}.module")

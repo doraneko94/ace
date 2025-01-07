@@ -22,13 +22,12 @@ class Output:
         self.unit = unit
 
 class Object:
-    def __init__(self, x, y, direction, color, unit):
+    def __init__(self, x, y, direction, unit):
         self.x = x
         self.y = y
         self.vx = 0
         self.vy = 0
         self.direction = direction
-        self.color = color
         self.unit = unit
         self.is_active = True
         self.lifetime = 0
@@ -49,10 +48,3 @@ class Object:
         self.vy = obj.vy
         self.lifetime = lifetime
         self.is_active = True
-    
-    def draw(self, screen):
-        pygame.draw.polygon(screen, self.color, [
-            (self.x + L1 * math.sin(deg2rad(self.direction)), self.y - L1 * math.cos(deg2rad(self.direction))),
-            (self.x + L2 * math.sin(deg2rad(A + self.direction)), self.y - L2 * math.cos(deg2rad(A + self.direction))),
-            (self.x - L2 * math.sin(deg2rad(A - self.direction)), self.y - L2 * math.cos(deg2rad(A - self.direction))),
-        ])

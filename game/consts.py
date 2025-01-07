@@ -1,5 +1,6 @@
-sizeX, sizeY = 800, 600
+SIZE_X, SIZE_Y = 800, 600
 L1, L2 = 20, 10
 A = 120
-sensor_range = 200
-K, dt = 1, 0.01
+SENSOR_RANGE = 200
+TIME_LIMIT = 1000
+K, DT = 1, 0.05

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <h1>Battle in Progress</h1>
+    <canvas id="battlefield" width="800" height="600"></canvas>
+    <script>
+        const socket = io();
+        const canvas = document.getElementById("battlefield");
+        const ctx = canvas.getContext("2d");
+
+        function drawGame(data) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            data.fighters.forEach((fighter, index) => {
+                ctx.save();
+                ctx.translate(fighter.x, fighter.y);
+
+                ctx.fillStyle = index === 0 ? 'blue' : 'red';
+
+                ctx.beginPath();
+                ctx.moveTo( 20 * Math.sin(fighter.direction), -20 * Math.cos(fighter.direction));
+                ctx.lineTo( 10 * Math.sin(4 * Math.PI / 3 + fighter.direction), -10 * Math.cos(4 * Math.PI / 3 + fighter.direction));
+                ctx.lineTo(-10 * Math.sin(4 * Math.PI / 3 - fighter.direction), -10 * Math.cos(4 * Math.PI / 3 - fighter.direction));
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.restore();
+            });
+
+            data.missiles.forEach(missile => {
+                ctx.save();
+                ctx.translate(missile.x, missile.y);
+
+                ctx.fillStyle = 'green';
+
+                ctx.beginPath();
+                ctx.moveTo( 20 * Math.sin(missile.direction), -20 * Math.cos(missile.direction));
+                ctx.lineTo( 10 * Math.sin(4 * Math.PI / 3 + missile.direction), -10 * Math.cos(4 * Math.PI / 3 + missile.direction));
+                ctx.lineTo(-10 * Math.sin(4 * Math.PI / 3 - missile.direction), -10 * Math.cos(4 * Math.PI / 3 - missile.direction));
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.restore();
+            });
+        }
+
+        socket.on('game_step', data => {
+            drawGame(data);
+        });
+
+        socket.on('game_end', data => {
+            alert(data.message);
+            window.location.href = '/home';
+        });
+
+        socket.emit('start_battle');
+    </script>
+</body>
+</html>
