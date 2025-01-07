@@ -22,13 +22,12 @@ class Output:
         self.unit = unit
 
 class Object:
-    def __init__(self, x, y, direction, color, unit):
+    def __init__(self, x, y, direction, unit):
         self.x = x
         self.y = y
         self.vx = 0
         self.vy = 0
         self.direction = direction
-        self.color = color
         self.unit = unit
         self.is_active = True
         self.lifetime = 0
