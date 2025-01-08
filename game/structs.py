@@ -27,6 +27,7 @@ class Object:
         self.y = y
         self.vx = 0
         self.vy = 0
+        self.vd = 0
         self.direction = direction
         self.unit = unit
         self.is_active = True
@@ -46,5 +47,6 @@ class Object:
         self.y = obj.y - L1 * 1.1 * math.cos(deg2rad(obj.direction))
         self.vx = obj.vx
         self.vy = obj.vy
+        self.vd = obj.vd
         self.lifetime = lifetime
         self.is_active = True

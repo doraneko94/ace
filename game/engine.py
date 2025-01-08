@@ -8,8 +8,8 @@ class Engine:
         module_pyr = import_module(module_pyr_path)
         module_com = import_module(module_com_path)
         self.objlist = [
-            Object(100, 100, 0, Unit.PYR),
-            Object(SIZE_X - 100, SIZE_Y - 100, 180, Unit.COM),
+            Object(100, 100, 180, Unit.PYR),
+            Object(SIZE_X - 100, SIZE_Y - 100, 0, Unit.COM),
             Object(0, 0, 0, Unit.PMI),
             Object(0, 0, 0, Unit.CMI)
         ]
@@ -42,12 +42,20 @@ class Engine:
                     
     def update(self, i, f, a):
         f = max(-1, min(1, f))
-        angle = deg2rad(a + self.objlist[i].direction)
-        self.objlist[i].vx += (f * 100 * math.sin(angle) - K * self.objlist[i].vx) * DT
-        self.objlist[i].vy += (f * 100 * math.cos(angle) - K * self.objlist[i].vy) * DT
+        #angle = deg2rad(a + self.objlist[i].direction)
+        #self.objlist[i].vx += (f * 100 * math.sin(angle) - K * self.objlist[i].vx) * DT
+        #self.objlist[i].vy += (f * 100 * math.cos(angle) - K * self.objlist[i].vy) * DT
+        dir_rad = deg2rad(self.objlist[i].direction)
+        a_rad = deg2rad(a)
+        fxy = f * 100 * math.cos(a_rad)
+        fd = f * math.sin(a_rad)
+        self.objlist[i].vx += (fxy * math.sin(dir_rad) - K * self.objlist[i].vx) * DT
+        self.objlist[i].vy += (fxy * math.cos(dir_rad) - K * self.objlist[i].vy) * DT
+        self.objlist[i].vd += (-fd - K * self.objlist[i].vd) * DT
         self.objlist[i].x += self.objlist[i].vx * DT
         self.objlist[i].y -= self.objlist[i].vy * DT
-        self.objlist[i].direction = rad2deg(math.atan2(self.objlist[i].vx, self.objlist[i].vy))
+        #self.objlist[i].direction = rad2deg(math.atan2(self.objlist[i].vx, self.objlist[i].vy))
+        #self.objlist[i].direction += self.objlist[i].vd * DT
 
     def step(self):
         f, a = self.fighter_pyr.move()

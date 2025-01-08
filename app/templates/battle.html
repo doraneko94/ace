@@ -15,7 +15,32 @@
     <h1>Battle in Progress</h1>
     <canvas id="battlefield" width="800" height="600"></canvas>
     <script>
-        const socket = io();
+        let socket;
+
+        function initializeSocket() {
+            if (socket) {
+                socket.off('game_step');
+                socket.off('game_end');
+                socket.removeAllListeners();
+                socket.disconnect();
+            }
+
+            socket = io();
+
+            socket.on('game_step', data => {
+                console.log('Received game_step data:', data);
+                drawGame(data);
+            });
+
+            socket.on('game_end', data => {
+                console.log('Game ended:', data);
+                alert(data.message);
+                window.location.href = '/home';
+            });
+
+            socket.emit('start_battle');
+        }
+
         const canvas = document.getElementById("battlefield");
         const ctx = canvas.getContext("2d");
 
@@ -24,16 +49,13 @@
             data.fighters.forEach((fighter, index) => {
                 ctx.save();
                 ctx.translate(fighter.x, fighter.y);
-
                 ctx.fillStyle = index === 0 ? 'blue' : 'red';
-
                 ctx.beginPath();
                 ctx.moveTo( 20 * Math.sin(fighter.direction), -20 * Math.cos(fighter.direction));
                 ctx.lineTo( 10 * Math.sin(4 * Math.PI / 3 + fighter.direction), -10 * Math.cos(4 * Math.PI / 3 + fighter.direction));
                 ctx.lineTo(-10 * Math.sin(4 * Math.PI / 3 - fighter.direction), -10 * Math.cos(4 * Math.PI / 3 - fighter.direction));
                 ctx.closePath();
                 ctx.fill();
-
                 ctx.restore();
             });
 
@@ -54,16 +76,25 @@
             });
         }
 
-        socket.on('game_step', data => {
-            drawGame(data);
+        window.addEventListener('beforeunload', () => {
+            if (socket) {
+                socket.off('game_step');
+                socket.off('game_end');
+                socket.disconnect();
+            }
         });
 
-        socket.on('game_end', data => {
-            alert(data.message);
-            window.location.href = '/home';
+        window.addEventListener("unload", () => {
+            if (socket) {
+                socket.disconnect();
+            }
         });
 
-        socket.emit('start_battle');
+        if (performance.getEntriesByType("navigation")[0].type === "back_forward") {
+            window.location.reload();
+        }
+
+        initializeSocket();
     </script>
 </body>
 </html>

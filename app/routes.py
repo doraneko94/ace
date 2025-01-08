@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_user, logout_user, login_required, current_user
-from flask_socketio import emit, join_room
+from flask_socketio import emit, join_room, leave_room, rooms
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.models import User
@@ -97,9 +97,30 @@ def handle_start_battle():
         return
     
     room = f"room_{user_id}"
+
+    current_rooms = rooms()
+    if room in current_rooms:
+        print(f"Resetting existing session for user {user_id} in room {room}.")
+        leave_room(room)
+    
     join_room(room)
+    print(f"User {user_id} started a battle in room {room}, session ID: {request.sid}")
 
     for step_result in start_session(user_id):
         emit('game_step', step_result, room=room)
 
     emit('game_end', {"message": "Game Over"}, room=room)
+
+@socketio.on("connect")
+def handle_connect():
+    print(f"User connected: {request.sid}")
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    user_id = current_user.get_id()
+    if user_id:
+        room = f"room_{user_id}"
+        print(f"User disconnected: {request.sid}, leaving room {room}")
+        leave_room(room)
+    else:
+        print(f"User disconnected: {request.sid}, but no user_id found.")
