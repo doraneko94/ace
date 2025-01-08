@@ -5,96 +5,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Battle</title>
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
-    <style>
-        canvas {
-            border: 1px solid black;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <h1>Battle in Progress</h1>
-    <canvas id="battlefield" width="800" height="600"></canvas>
+    <div class="battle-container">
+        <h1 id="status">Battle in Progress...</h1>
+        <canvas id="battlefield" width="800" height="600"></canvas>
+        <button id="view-history" class="btn" disabled>VIEW</button>
+    </div>
+    
     <script>
-        let socket;
-
-        function initializeSocket() {
-            if (socket) {
-                socket.off('game_step');
-                socket.off('game_end');
-                socket.removeAllListeners();
-                socket.disconnect();
-            }
-
-            socket = io();
-
-            socket.on('game_step', data => {
-                console.log('Received game_step data:', data);
-                drawGame(data);
-            });
-
-            socket.on('game_end', data => {
-                console.log('Game ended:', data);
-                alert(data.message);
-                window.location.href = '/home';
-            });
-
-            socket.emit('start_battle');
-        }
-
+        const socket = io();
+        const statusText = document.getElementById("status");
+        const historyButton = document.getElementById("view-history");
         const canvas = document.getElementById("battlefield");
         const ctx = canvas.getContext("2d");
 
-        function drawGame(data) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            data.fighters.forEach((fighter, index) => {
-                ctx.save();
-                ctx.translate(fighter.x, fighter.y);
-                ctx.fillStyle = index === 0 ? 'blue' : 'red';
-                ctx.beginPath();
-                ctx.moveTo( 20 * Math.sin(fighter.direction), -20 * Math.cos(fighter.direction));
-                ctx.lineTo( 10 * Math.sin(4 * Math.PI / 3 + fighter.direction), -10 * Math.cos(4 * Math.PI / 3 + fighter.direction));
-                ctx.lineTo(-10 * Math.sin(4 * Math.PI / 3 - fighter.direction), -10 * Math.cos(4 * Math.PI / 3 - fighter.direction));
-                ctx.closePath();
-                ctx.fill();
-                ctx.restore();
-            });
-
-            data.missiles.forEach(missile => {
-                ctx.save();
-                ctx.translate(missile.x, missile.y);
-
-                ctx.fillStyle = 'green';
-
-                ctx.beginPath();
-                ctx.moveTo( 20 * Math.sin(missile.direction), -20 * Math.cos(missile.direction));
-                ctx.lineTo( 10 * Math.sin(4 * Math.PI / 3 + missile.direction), -10 * Math.cos(4 * Math.PI / 3 + missile.direction));
-                ctx.lineTo(-10 * Math.sin(4 * Math.PI / 3 - missile.direction), -10 * Math.cos(4 * Math.PI / 3 - missile.direction));
-                ctx.closePath();
-                ctx.fill();
-
-                ctx.restore();
-            });
-        }
-
-        window.addEventListener('beforeunload', () => {
-            if (socket) {
-                socket.off('game_step');
-                socket.off('game_end');
-                socket.disconnect();
-            }
+        socket.on("battle_end", data => {
+            statusText.textContent = `Finished: ${data.result}`;
+            historyButton.disabled = false;
         });
 
-        window.addEventListener("unload", () => {
-            if (socket) {
-                socket.disconnect();
-            }
+        historyButton.addEventListener('click', () => {
+            socket.emit('get_history');
+            historyButton.disabled = true;
         });
 
-        if (performance.getEntriesByType("navigation")[0].type === "back_forward") {
-            window.location.reload();
+        socket.on('battle_history', data => {
+            playHistory(data);
+        });
+
+        function playHistory(history) {
+            let index = 0;
+
+            function drawFrame() {
+                if (index >= history.length) return;
+
+                const frame = history[index];
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                frame.fighters.forEach((fighter, index) => {
+                    ctx.save();
+                    ctx.translate(fighter.x, fighter.y);
+                    ctx.fillStyle = index === 0 ? 'blue' : 'red';
+                    ctx.beginPath();
+                    ctx.moveTo( 20 * Math.sin(fighter.direction), -20 * Math.cos(fighter.direction));
+                    ctx.lineTo( 10 * Math.sin(4 * Math.PI / 3 + fighter.direction), -10 * Math.cos(4 * Math.PI / 3 + fighter.direction));
+                    ctx.lineTo(-10 * Math.sin(4 * Math.PI / 3 - fighter.direction), -10 * Math.cos(4 * Math.PI / 3 - fighter.direction));
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                });
+
+                frame.missiles.forEach(missile => {
+                    ctx.save();
+                    ctx.translate(missile.x, missile.y);
+
+                    ctx.fillStyle = 'green';
+
+                    ctx.beginPath();
+                    ctx.moveTo( 20 * Math.sin(missile.direction), -20 * Math.cos(missile.direction));
+                    ctx.lineTo( 10 * Math.sin(4 * Math.PI / 3 + missile.direction), -10 * Math.cos(4 * Math.PI / 3 + missile.direction));
+                    ctx.lineTo(-10 * Math.sin(4 * Math.PI / 3 - missile.direction), -10 * Math.cos(4 * Math.PI / 3 - missile.direction));
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                });
+
+                index++;
+                setTimeout(drawFrame, 100);
+            }
+
+            drawFrame();
         }
 
-        initializeSocket();
+        socket.emit('start_battle');
     </script>
 </body>
 </html>

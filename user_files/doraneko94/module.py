@@ -6,7 +6,7 @@ class Fighter:
 
     def move(self):
         position, _ = self.core.sense()
-        f, a = 1, 0
+        f, a = 1, 45
         if position.x < 100 or position.x > 700 or position.y < 100 or position.y > 500:
             a = 45
         return f, a

@@ -4,8 +4,9 @@ from flask_socketio import emit, join_room, leave_room, rooms
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.models import User
-from app.services import save_uploaded_file, start_session
+from app.services import save_uploaded_file, start_session, run_battle
 from app import db, socketio
+import os, re, shutil
 
 main = Blueprint('main', __name__)
 
@@ -69,17 +70,26 @@ def register():
             flash('Username and Password are required.')
             return redirect(url_for('main.register'))
         
+        if not re.match(r'^[a-zA-Z0-9_]+$', username):
+            flash('Username must only contain letters, numbers, and underscores.')
+            return redirect(url_for('main.register'))
+        
         existing_user = User.query.filter_by(username=username).first()
         if existing_user:
             flash('Username already exists.')
             return redirect(url_for('main.register'))
         
-        new_user = User(
-            username=username,
-            password=generate_password_hash(password)
-        )
+        hashed_password = generate_password_hash(password)
+        new_user = User(username=username, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
+
+        user_folder = os.path.join("user_files", username)
+        if not os.path.exists(user_folder):
+            os.makedirs(user_folder)
+            default_file = os.path.join("app", "default.py")
+            user_file = os.path.join(user_folder, "module.py")
+            shutil.copy(default_file, user_file)
 
         flash('User registered successfully. You can now log in.')
         return redirect(url_for('main.index'))
@@ -88,6 +98,8 @@ def register():
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() == 'py'
+
+battle_history = {}
 
 @socketio.on('start_battle')
 def handle_start_battle():
@@ -98,18 +110,26 @@ def handle_start_battle():
     
     room = f"room_{user_id}"
 
-    current_rooms = rooms()
-    if room in current_rooms:
-        print(f"Resetting existing session for user {user_id} in room {room}.")
-        leave_room(room)
+    #current_rooms = rooms()
+    #if room in current_rooms:
+    #    print(f"Resetting existing session for user {user_id} in room {room}.")
+    #    leave_room(room)
     
     join_room(room)
     print(f"User {user_id} started a battle in room {room}, session ID: {request.sid}")
 
-    for step_result in start_session(user_id):
-        emit('game_step', step_result, room=room)
+    #for step_result in start_session(user_id):
+    #    emit('game_step', step_result, room=room)
 
-    emit('game_end', {"message": "Game Over"}, room=room)
+    battle_data, result = run_battle(user_id)
+    emit('battle_end', {"result": result}, room=room)
+    battle_history[user_id] = battle_data
+
+@socketio.on("get_history")
+def handle_get_history():
+    user_id = current_user.id
+    history = battle_history.get(user_id, [])
+    emit("battle_history", history)
 
 @socketio.on("connect")
 def handle_connect():

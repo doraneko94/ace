@@ -48,14 +48,14 @@ class Engine:
         dir_rad = deg2rad(self.objlist[i].direction)
         a_rad = deg2rad(a)
         fxy = f * 100 * math.cos(a_rad)
-        fd = f * math.sin(a_rad)
+        fd = f * 100 * math.sin(a_rad)
         self.objlist[i].vx += (fxy * math.sin(dir_rad) - K * self.objlist[i].vx) * DT
         self.objlist[i].vy += (fxy * math.cos(dir_rad) - K * self.objlist[i].vy) * DT
         self.objlist[i].vd += (-fd - K * self.objlist[i].vd) * DT
         self.objlist[i].x += self.objlist[i].vx * DT
         self.objlist[i].y -= self.objlist[i].vy * DT
         #self.objlist[i].direction = rad2deg(math.atan2(self.objlist[i].vx, self.objlist[i].vy))
-        #self.objlist[i].direction += self.objlist[i].vd * DT
+        self.objlist[i].direction += self.objlist[i].vd * DT
 
     def step(self):
         f, a = self.fighter_pyr.move()
@@ -90,15 +90,20 @@ class Engine:
             "missiles": [
                 { "x": obj.x, "y": obj.y, "direction": deg2rad(obj.direction) } for obj in self.objlist[2:] if obj.is_active
             ],
-            "pyr_wins": self.pyr_wins
         }
     
     def check_collisions(self):
         if self.time_elapsed == 500:
             self.pyr_wins = True
 
-    def run_game(self):
-        while self.time_elapsed < TIME_LIMIT and self.pyr_wins is None:
-            yield self.step()
-            self.time_elapsed += 1
-            time.sleep(0.1)
+    def is_finished(self):
+        self.time_elapsed += 1
+        return self.pyr_wins is not None or self.time_elapsed >= TIME_LIMIT
+    
+    def get_result(self):
+        return self.pyr_wins
+    #def run_game(self):
+    #    while self.time_elapsed < TIME_LIMIT and self.pyr_wins is None:
+    #        yield self.step()
+    #        self.time_elapsed += 1
+    #        time.sleep(0.1)

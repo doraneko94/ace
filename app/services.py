@@ -23,15 +23,37 @@ def start_session(user_id):
         yield step_result
     update_user_rating(user_id, user_id_com, engine.pyr_wins)
 
-def start_battle(user_id):
-    module_pyr = import_module(f"user_files.{User.query.get(user_id).username}.module")
-    user_id_com = select_random_opponent(user_id)
-    module_com = import_module(f"user_files.{User.query.get(user_id_com).username}.module")
+#def start_battle(user_id):
+#    module_pyr = import_module(f"user_files.{User.query.get(user_id).username}.module")
+#    user_id_com = select_random_opponent(user_id)
+#    module_com = import_module(f"user_files.{User.query.get(user_id_com).username}.module")
+#
+#    from game.engine import run_battle
+#    pyr_wins = run_battle(module_pyr, module_com)
+#    update_user_rating(user_id, user_id_com, pyr_wins)
+#    return pyr_wins
 
-    from game.engine import run_battle
-    pyr_wins = run_battle(module_pyr, module_com)
+def run_battle(user_id):
+    module_pyr_path = f"user_files.{User.query.get(user_id).username}.module"
+    user_id_com = select_random_opponent(user_id)
+    module_com_path = f"user_files.{User.query.get(user_id_com).username}.module"
+
+    engine = Engine(module_pyr_path, module_com_path)
+    battle_data = []
+    while not engine.is_finished():
+        frame_data  = engine.step()
+        battle_data.append(frame_data)
+
+    pyr_wins = engine.get_result()
     update_user_rating(user_id, user_id_com, pyr_wins)
-    return pyr_wins
+    result = ""
+    if pyr_wins is None:
+        result = "Draw"
+    elif pyr_wins:
+        result = "Win!"
+    else:
+        result = "Lose"
+    return battle_data, result
 
 def select_random_opponent(exclude_user_id):
     import random
