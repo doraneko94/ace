@@ -29,7 +29,7 @@ class Engine:
                         x = dist * math.sin(a - deg2rad(self_core.__object.direction))
                         y = dist * math.cos(a - deg2rad(self_core.__object.direction))
                         outputs.append(Output(x, y, decodeUnit(obj.unit, self_core.__object.unit)))
-                return Position(self_core.__object.x, self_core.__object.y, self_core.__object.direction), outputs
+                return Position(self_core.__object.x, SIZE_Y - self_core.__object.y, self_core.__object.direction), outputs
 
 
         self.fighter_pyr = module_pyr.Fighter(Core(self.objlist[0]))
@@ -93,8 +93,23 @@ class Engine:
         }
     
     def check_collisions(self):
-        if self.time_elapsed == 500:
+        dead = [False, False]
+        for i in range(2):
+            if self.objlist[i].x < 0 or self.objlist[i].x > SIZE_X or self.objlist[i].y < 0 or self.objlist[i].y > SIZE_Y:
+                dead[i] = True
+            for j in range(2, 4):
+                if self.objlist[i].distance(self.objlist[j]) < COLLISION_SIZE:
+                    dead[i] = True
+        if dead[0]:
+            if dead[1]:
+                self.time_elapsed = TIME_LIMIT
+            else:
+                self.pyr_wins = False
+        elif dead[1]:
             self.pyr_wins = True
+        for i in range(2, 4):
+            if self.objlist[i].x < 0 or self.objlist[i].x > SIZE_X or self.objlist[i].y < 0 or self.objlist[i].y > SIZE_Y:
+                self.objlist[i].deactivate()
 
     def is_finished(self):
         self.time_elapsed += 1

@@ -46,14 +46,36 @@ def home():
             flash('No selected file.')
             return redirect(url_for('main.home'))
         
-        if file and allowed_file(file.filename):
+        if file.filename and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             save_uploaded_file(filename, current_user.id)
             flash('File uploaded successfully.')
         else:
             flash('Invalid file type. Only .py files are allowed.')
         return redirect(url_for('main.home'))
-    return render_template('home.html')  # ホーム画面
+    
+    user_folder = os.path.join("user_files", current_user.username)
+    module_path = os.path.join(user_folder, "module.py")
+    module_content = ""
+    if os.path.exists(module_path):
+        with open(module_path, "r") as f:
+            module_content = f.read()
+
+    return render_template('home.html', module_content=module_content)  # ホーム画面
+
+@main.route("/update-module", methods=["POST"])
+@login_required
+def update_module():
+    user_folder = os.path.join("user_files", current_user.username)
+    os.makedirs(user_folder, exist_ok=True)
+    module_path = os.path.join(user_folder, "module.py")
+    module_content = request.form["editor"]
+
+    with open(module_path, "w") as f:
+        f.write(module_content)
+
+    flash("Module updated successfully.")
+    return redirect(url_for("main.home"))
 
 @main.route('/battle', methods=['GET'])
 @login_required

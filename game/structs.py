@@ -42,11 +42,12 @@ class Object:
     def deactivate(self):
         self.is_active = False
     
-    def activate(self, obj, lifetime=500):
+    def activate(self, obj, lifetime=LIFE_TIME):
         self.x = obj.x + L1 * 1.1 * math.sin(deg2rad(obj.direction))
         self.y = obj.y - L1 * 1.1 * math.cos(deg2rad(obj.direction))
         self.vx = obj.vx
         self.vy = obj.vy
         self.vd = obj.vd
+        self.direction = obj.direction
         self.lifetime = lifetime
         self.is_active = True

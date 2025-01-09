@@ -3,24 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/styles.css">
     <title>Home</title>
 </head>
 <body>
-    <h1>Welcome to the Game</h1>
-    <form method="POST" enctype="multipart/form-data">
-        <label for="file">Upload your module.py:</label>
-        <input type="file" id="file", name="file" accept=".py" required>
-        <button type="submit">Upload</button>
-    </form>
+    <div class="home-container">
+        <div class="user-info">
+            <h1>Welcome, {{ current_user.username }}</h1>
+            <p>Your current rating: <strong> {{ current_user.rating }} </strong></p>
+        </div>
 
-    <hr>
+        <hr>
 
-    <form action="/battle" method="GET">
-        <button type="submit">Start Battle</button>
-    </form>
+        <div class="upload-section">
+            <h2>Upload Your Module</h2>
+            <form method="POST" enctype="multipart/form-data">
+                <label for="file">Choose a file to upload:</label>
+                <input type="file" id="file", name="file" accept=".py" required>
+                <button type="submit">Upload</button>
+            </form>
+        </div>
 
-    <hr>
+        <hr>
 
-    <a href="/logout">Logout</a>
+        <div class="editor-section">
+            <h2>Edit Your Module</h2>
+            <form method="POST" action="/update-module">
+                <textarea id="editor" name="editor" rows="20" required>{{ module_content }}</textarea>
+                <button type="submit" class="btn">Save Changes</button>
+            </form>
+        </div>
+
+        <hr>
+
+        <div class="actions">
+            <form action="/battle" method="GET">
+                <button type="submit" class="btn btn-battle">Start Battle</button>
+            </form>
+            <a href="/logout" class="btn btn-logout">Logout</a>
+        </div>
+    </div>
 </body>
 </html>
