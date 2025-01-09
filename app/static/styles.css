@@ -239,3 +239,70 @@ h2 {
 .actions .btn-logout:hover {
     background-color: #c82333;
 }
+
+/* ヘッダー */
+.home-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.home-header h1 {
+    font-size: 1.5rem;
+    color: #333333;
+}
+
+.home-header p {
+    font-size: 1rem;
+    color: #666666;
+}
+
+.btn-logout {
+    background-color: #dc3545;
+    color: #ffffff;
+    text-align: center;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-logout:hover {
+    background-color: #c82333;
+}
+
+/* バトルセクション */
+.battle-section {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.btn-battle {
+    background-color: #28a745;
+    color: #ffffff;
+    font-size: 1.2rem;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-battle:hover {
+    background-color: #218838;
+}
+
+/* テキストエディタ */
+.editor-section {
+    margin-top: 2rem;
+}
+
+.CodeMirror {
+    height: auto;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+}

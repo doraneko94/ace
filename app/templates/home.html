@@ -3,15 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/styles.css">
     <title>Home</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/theme/dracula.min.css">
 </head>
 <body>
     <div class="home-container">
-        <div class="user-info">
+        <header class="home-header">
             <h1>Welcome, {{ current_user.username }}</h1>
-            <p>Your current rating: <strong> {{ current_user.rating }} </strong></p>
-        </div>
+            <p>Your current rating: <strong> {{ current_user.rating | int }} </strong></p>
+            <a href="/logout" class="btn btn-logout">Logout</a>
+        </header>
 
         <hr>
 
@@ -19,7 +22,7 @@
             <h2>Upload Your Module</h2>
             <form method="POST" enctype="multipart/form-data">
                 <label for="file">Choose a file to upload:</label>
-                <input type="file" id="file", name="file" accept=".py" required>
+                <input type="file" id="file" name="file" accept=".py" required>
                 <button type="submit">Upload</button>
             </form>
         </div>
@@ -36,12 +39,25 @@
 
         <hr>
 
-        <div class="actions">
+        <div class="battle-section">
             <form action="/battle" method="GET">
                 <button type="submit" class="btn btn-battle">Start Battle</button>
             </form>
-            <a href="/logout" class="btn btn-logout">Logout</a>
         </div>
     </div>
+
+    <!-- CodeMirror Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/mode/python/python.min.js"></script>
+    <script>
+        // CodeMirror Initialization
+        const editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+            lineNumbers: true,
+            mode: 'python',
+            theme: 'dracula',
+            indentUnit: 4,
+            tabSize: 4
+        });
+    </script>
 </body>
 </html>
