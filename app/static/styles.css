@@ -261,10 +261,9 @@ h2 {
 .btn-logout {
     background-color: #dc3545;
     color: #ffffff;
-    text-align: center;
     text-decoration: none;
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.75rem;
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s;
@@ -305,4 +304,25 @@ h2 {
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 1rem;
+}
+
+/* ファイル選択セクション */
+.editor-header {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.editor-header label {
+    margin-right: 1rem;
+    font-size: 0.9rem;
+    color: #666666;
+}
+
+#file-selector {
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }

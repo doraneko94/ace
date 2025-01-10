@@ -36,6 +36,7 @@ def logout():
 @main.route('/home', methods=['GET', 'POST'])
 @login_required
 def home():
+    """
     if request.method == 'POST':
         if 'file' not in request.files:
             flash("No file part.")
@@ -53,29 +54,91 @@ def home():
         else:
             flash('Invalid file type. Only .py files are allowed.')
         return redirect(url_for('main.home'))
-    
-    user_folder = os.path.join("user_files", current_user.username)
-    module_path = os.path.join(user_folder, "module.py")
-    module_content = ""
-    if os.path.exists(module_path):
-        with open(module_path, "r") as f:
-            module_content = f.read()
+    """
 
-    return render_template('home.html', module_content=module_content)  # ホーム画面
-
-@main.route("/update-module", methods=["POST"])
-@login_required
-def update_module():
     user_folder = os.path.join("user_files", current_user.username)
     os.makedirs(user_folder, exist_ok=True)
-    module_path = os.path.join(user_folder, "module.py")
-    module_content = request.form["editor"]
+    user_files = [f for f in os.listdir(user_folder) if f.endswith(".py")]
 
-    with open(module_path, "w") as f:
-        f.write(module_content)
+    selected_file = request.args.get("file", "module.py")
+    selected_file_path = os.path.join(user_folder, selected_file)
+    initial_file_content = ""
+    if os.path.exists(selected_file_path):
+        with open(selected_file_path, "r") as f:
+            initial_file_content = f.read()
 
-    flash("Module updated successfully.")
-    return redirect(url_for("main.home"))
+    return render_template('home.html', user_files=user_files, initial_file_content=initial_file_content)  # ホーム画面
+
+@main.route("/update-file", methods=["POST"])
+@login_required
+def update_module():
+    data = request.form
+    file_name = data.get("file_selector", "module.py")
+    content = data.get("editor", "")
+
+    user_folder = os.path.join("user_files", current_user.username)
+    file_path = os.path.join(user_folder, file_name)
+    with open(file_path, "w") as f:
+        f.write(content)
+
+    flash("File saved successfully.")
+    return redirect(url_for("home"))
+
+@main.route("/file-manager", methods=["GET"])
+@login_required
+def file_manager():
+    user_folder = os.path.join("user_files", current_user.username)
+    os.makedirs(user_folder, exist_ok=True)
+    files = []
+    for file_name in os.listdir(user_folder):
+        file_path = os.path.join(user_folder, file_name)
+        if os.path.isfile(file_path):
+            size = os.path.getsize(file_path) / 1024
+            files.append({"name": file_name, "size": round(size, 2)})
+
+    return render_template("file_manager.html", files=files)
+@main.route("/upload-file", methods=["POST"])
+@login_required
+def upload_file():
+    file = request.files.get("file")
+    if file and file.filename.endswith(".py"):
+        user_folder = os.path.join('user_files', current_user.username)
+        os.makedirs(user_folder, exist_ok=True)
+
+        # フォルダ内の総容量を計算
+        total_size = sum(os.path.getsize(os.path.join(user_folder, f)) for f in os.listdir(user_folder))
+        if total_size + len(file.read()) > 5 * 1024 * 1024:  # 5MB制限
+            flash('Total folder size exceeds 5MB. Upload failed.', 'error')
+            return redirect(url_for('file_manager'))
+
+        file.seek(0)  # ファイルポインタを先頭に戻す
+        file.save(os.path.join(user_folder, secure_filename(file.filename)))
+        flash('File uploaded successfully.')
+    else:
+        flash('Only .py files are allowed.', 'error')
+    return redirect(url_for('file_manager'))
+
+# ファイル削除処理
+@main.route('/delete-file', methods=['POST'])
+@login_required
+def delete_file():
+    file_name = request.form.get('file_name')
+    user_folder = os.path.join('user_files', current_user.username)
+    file_path = os.path.join(user_folder, file_name)
+
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        flash('File deleted successfully.')
+    else:
+        flash('File not found.', 'error')
+    return redirect(url_for('file_manager'))
+
+# ファイル編集処理（ファイル管理からホームへ遷移）
+@main.route('/edit-file', methods=['POST'])
+@login_required
+def edit_file():
+    file_name = request.form.get('file_name')
+    return redirect(url_for('home', file=file_name))
 
 @main.route('/battle', methods=['GET'])
 @login_required

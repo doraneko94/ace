@@ -18,22 +18,27 @@
 
         <hr>
 
-        <div class="upload-section">
-            <h2>Upload Your Module</h2>
-            <form method="POST" enctype="multipart/form-data">
-                <label for="file">Choose a file to upload:</label>
-                <input type="file" id="file" name="file" accept=".py" required>
-                <button type="submit">Upload</button>
+        <div class="file-management-section">
+            <form method="GET" action="/file-manager">
+                <button type="submit" class="btn btn-file-management">Manage Files</button>
             </form>
         </div>
 
         <hr>
 
         <div class="editor-section">
-            <h2>Edit Your Module</h2>
-            <form method="POST" action="/update-module">
-                <textarea id="editor" name="editor" rows="20" required>{{ module_content }}</textarea>
-                <button type="submit" class="btn">Save Changes</button>
+            <h2>Edit Your Files</h2>
+            <div class="editor-header">
+                <label for="file-selector">Select File:</label>
+                <select id="file-selector">
+                    {% for file in user_files %}
+                        <option value="{{ file }}" {% if file == "module.py" %}selected{% endif %}>{{ file }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <form method="POST" action="/update-file" id="editor-form">
+                <textarea id="editor" name="editor" rows="20" required>{{ initial_file_content }}</textarea>
+                <button type="submit" class="btn btn-save">Save Changes</button>
             </form>
         </div>
 
@@ -50,6 +55,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/mode/python/python.min.js"></script>
     <script>
+        const editorElement = document.getElementById('editor');
+        const fileSelector = document.getElementById('file-selector');
+        const editorForm = document.getElementById('editor-form');
         // CodeMirror Initialization
         const editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
             lineNumbers: true,
@@ -57,6 +65,52 @@
             theme: 'dracula',
             indentUnit: 4,
             tabSize: 4
+        });
+
+        let currentFile = fileSelector.value;
+        let isModified = false;
+
+        // エディタの変更検知
+        editor.on('change', () => {
+            isModified = true;
+        });
+
+        // ファイル選択の変更処理
+        fileSelector.addEventListener('change', (event) => {
+            const newFile = event.target.value;
+            if (isModified) {
+                const confirmChange = confirm('変更内容は保存されません。変更を破棄しますか？');
+                if (!confirmChange) {
+                    fileSelector.value = currentFile; // 元の選択に戻す
+                    return;
+                }
+            }
+            // ファイルを切り替える
+            fetch(`/get-file-content?file=${newFile}`)
+                .then(response => response.json())
+                .then(data => {
+                    editor.setValue(data.content);
+                    isModified = false;
+                    currentFile = newFile;
+                })
+                .catch(error => console.error('Error fetching file content:', error));
+        });
+
+        // 保存ボタンの処理
+        editorForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const content = editor.getValue();
+            fetch('/update-file', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ file: currentFile, content })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('File saved successfully.');
+                isModified = false;
+            })
+            .catch(error => console.error('Error saving file:', error));
         });
     </script>
 </body>
