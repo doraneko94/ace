@@ -72,6 +72,17 @@ input[type="text"]:focus, input[type="password"]:focus {
     transition: background-color 0.3s;
 }
 
+/* その他のボタン */
+.btn {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.3s ease;
+}
+
 .btn:hover {
     background-color: #0056b3;
 }
@@ -208,36 +219,12 @@ h2 {
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 
-/* アクションボタン */
-.actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 2rem;
-}
-
-.actions .btn-battle {
+.btn-battle {
     background-color: #28a745; /* グリーン */
 }
 
-.actions .btn-battle:hover {
+.btn-battle:hover {
     background-color: #218838;
-}
-
-.actions .btn-logout {
-    background-color: #dc3545; /* レッド */
-    color: #ffffff;
-    text-align: center;
-    text-decoration: none;
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.actions .btn-logout:hover {
-    background-color: #c82333;
 }
 
 /* ヘッダー */
@@ -245,7 +232,6 @@ h2 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
 }
 
 .home-header h1 {
@@ -255,18 +241,27 @@ h2 {
 
 .home-header p {
     font-size: 1rem;
+    padding: 1rem;
     color: #666666;
+}
+
+.home-header .btn-logout {
+    margin-left: auto;
 }
 
 .btn-logout {
     background-color: #dc3545;
     color: #ffffff;
     text-decoration: none;
-    padding: 0.3rem 0.8rem;
-    font-size: 0.75rem;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.9rem;
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s;
+    display: inline-block;
+    text-align: center;
+    white-space: nowrap;
+    width: auto;
 }
 
 .btn-logout:hover {
@@ -325,4 +320,146 @@ h2 {
     font-size: 1rem;
     border: 1px solid #ccc;
     border-radius: 4px;
+}
+
+/* 新規ファイル作成ボタン */
+.btn-new-file {
+    margin-left: 1rem;
+    background-color: #ffc107; /* 黄色 */
+    color: #000000;
+    width: auto;
+    margin-left: auto;
+}
+
+.btn-new-file:hover {
+    background-color: #e0a800;
+}
+
+.file-manager-container {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    margin: 2rem auto;
+    font-family: Arial, sans-serif;
+}
+
+.file-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2rem;
+}
+
+.file-table th, .file-table td {
+    text-align: left;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+}
+
+.file-table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+
+.file-table td {
+    font-size: 0.9rem;
+}
+
+.size-column {
+    text-align: right;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-buttons form {
+    display: inline;
+}
+
+/* 不活性化されたボタン */
+.btn.disabled, .btn:disabled {
+    background-color: #d6d6d6;
+    color: #9a9a9a;
+    border: 1px solid #ccc;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.btn-delete {
+    background-color: #dc3545;
+    color: #ffffff;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
+}
+
+.btn-edit {
+    background-color: #007bff;
+    color: #ffffff;
+}
+
+.btn-edit:hover {
+    background-color: #0056b3;
+}
+
+.btn-upload {
+    background-color: #28a745;
+    color: #ffffff;
+}
+
+.btn-upload:hover {
+    background-color: #218838;
+}
+
+.btn-back {
+    background-color: #6c757d;
+    color: #ffffff;
+}
+
+.btn-back:hover {
+    background-color: #5a6268;
+}
+
+/* 404エラーページスタイル */
+.error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f8f9fa; /* 背景色を薄いグレーに設定 */
+    text-align: center;
+    font-family: Arial, sans-serif;
+}
+
+.error-title {
+    font-size: 10rem; /* 大きな404表示 */
+    color: #dc3545; /* 赤色 */
+    margin: 0;
+}
+
+.error-message {
+    font-size: 1.5rem;
+    color: #6c757d; /* 灰色 */
+    margin: 1rem 0;
+}
+
+.btn-home {
+    display: inline-block;
+    background-color: #007bff; /* 青色 */
+    color: #ffffff;
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    font-size: 1rem;
+    border-radius: 5px;
+    margin-top: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.btn-home:hover {
+    background-color: #0056b3; /* ホバー時の濃い青 */
 }

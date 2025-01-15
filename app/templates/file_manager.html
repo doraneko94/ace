@@ -11,28 +11,34 @@
         <h1>Manage Your Files</h1>
 
         <!-- ファイル一覧 -->
-        <table>
+        <table class="file-table">
             <thead>
                 <tr>
                     <th>File Name</th>
-                    <th>Size (KB)</th>
+                    <th class="size-column">Size (KB)</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for file in files %}
                 <tr>
-                    <td>{{ file.name }}</td>
-                    <td>{{ file.size }}</td>
-                    <td>
-                        <form method="POST" action="/delete-file" style="display: inline;">
-                            <input type="hidden" name="file_name" value="{{ file.name }}">
-                            <button type="submit" class="btn btn-delete">Delete</button>
-                        </form>
+                    <td>{{ file.name | e }}</td>
+                    <td class="size-column">{{ file.size | e }}</td>
+                    <td class="action-buttons">
                         <form method="POST" action="/edit-file" style="display: inline;">
-                            <input type="hidden" name="file_name" value="{{ file.name }}">
+                            {{ csrf_token() }}
+                            <input type="hidden" name="file_name" value="{{ file.name | e }}">
                             <button type="submit" class="btn btn-edit">Edit</button>
                         </form>
+                        {% if file.name == "module.py" %}
+                            <button class="btn btn-delete disabled" disabled>Delete</button>
+                        {% else %}
+                            <form method="POST" action="/delete-file" class="delete-form" style="display: inline;">
+                                {{ csrf_token() }}
+                                <input type="hidden" name="file_name" value="{{ file.name | e }}">
+                                <button type="submit" class="btn btn-delete delete-button">Delete</button>
+                            </form>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
@@ -42,6 +48,7 @@
         <!-- アップロードフォーム -->
         <h2>Upload a New File</h2>
         <form method="POST" enctype="multipart/form-data" action="/upload-file">
+            {{ csrf_token() }}
             <input type="file" name="file" accept=".py" required>
             <button type="submit" class="btn btn-upload">Upload</button>
         </form>
@@ -53,5 +60,17 @@
             </form>
         </div>
     </div>
+
+    <script>
+        document.querySelectorAll(".delete-form").forEach(form => {
+            form.addEventListener("submit", event => {
+                const fileName = form.querySelector('input[name="file_name"]').value;
+                const confirmDelete = confirm(`Are you sure you want to delete the file "${fileName}"?`);
+                if (!confirmDelete) {
+                    event.preventDefault();
+                }
+            });
+        });
+    </script>
 </body>
 </html>

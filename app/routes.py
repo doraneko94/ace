@@ -1,20 +1,24 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_socketio import emit, join_room, leave_room, rooms
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.models import User
 from app.services import save_uploaded_file, start_session, run_battle
-from app import db, socketio
+from app import app, db, socketio
 import os, re, shutil
 
 main = Blueprint('main', __name__)
+limiter = Limiter(get_remote_address, app=app)
 
 @main.route('/')
 def index():
     return render_template('index.html')  # トップページ (ログインフォーム)
 
 @main.route('/login', methods=['POST'])
+@limiter.limit("5 per minute")
 def login():
     username = request.form['username']
     password = request.form['password']
@@ -67,22 +71,77 @@ def home():
         with open(selected_file_path, "r") as f:
             initial_file_content = f.read()
 
-    return render_template('home.html', user_files=user_files, initial_file_content=initial_file_content)  # ホーム画面
+    return render_template('home.html', selected_file=selected_file, user_files=user_files, initial_file_content=initial_file_content)  # ホーム画面
+
+@main.route('/get-file-content', methods=['GET'])
+@login_required
+def get_file_content():
+    file_name = request.args.get('file', '').strip()  # リクエストからファイル名を取得
+    user_folder = os.path.join('user_files', current_user.username)
+    file_path = os.path.join(user_folder, file_name)
+
+    # ファイルの存在を確認
+    if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        return jsonify({"error": "File not found."}), 404
+
+    # ファイル内容を読み込む
+    try:
+        with open(file_path, 'r') as f:
+            content = f.read()
+        return jsonify({"content": content}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@main.route('/create-new-file', methods=['POST'])
+@login_required
+def create_new_file():
+    data = request.json
+    file_name = data.get('file_name', '').strip()
+
+    # ファイル名が空でないか確認
+    if not file_name:
+        return jsonify({'success': False, 'error': 'File name cannot be empty.'}), 400
+
+    # ファイル名が `.py` で終わらない場合に `.py` を追加
+    if not file_name.endswith('.py'):
+        file_name += '.py'
+
+    user_folder = os.path.join('user_files', current_user.username)
+    os.makedirs(user_folder, exist_ok=True)
+
+    # ファイル名の重複チェック
+    file_path = os.path.join(user_folder, file_name)
+    if os.path.exists(file_path):
+        return jsonify({'success': False, 'error': 'A file with this name already exists.'}), 400
+
+    content = '# New Python file\n'
+    # 新しいファイルを作成
+    try:
+        with open(file_path, 'w') as f:
+            f.write(content)
+        return jsonify({'success': True, "content": content}), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @main.route("/update-file", methods=["POST"])
 @login_required
 def update_module():
-    data = request.form
-    file_name = data.get("file_selector", "module.py")
-    content = data.get("editor", "")
+    data = request.json
+    file_name = secure_filename(data.get("file_name", ""))
+    content = data.get("content", "")
 
     user_folder = os.path.join("user_files", current_user.username)
     file_path = os.path.join(user_folder, file_name)
-    with open(file_path, "w") as f:
-        f.write(content)
 
-    flash("File saved successfully.")
-    return redirect(url_for("home"))
+    if not os.path.exists(file_path):
+        return jsonify({"success": False, "error": "File not found."}), 404
+    
+    try:
+        with open(file_path, "w") as f:
+            f.write(content)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @main.route("/file-manager", methods=["GET"])
 @login_required
@@ -116,7 +175,7 @@ def upload_file():
         flash('File uploaded successfully.')
     else:
         flash('Only .py files are allowed.', 'error')
-    return redirect(url_for('file_manager'))
+    return redirect(url_for('main.file_manager'))
 
 # ファイル削除処理
 @main.route('/delete-file', methods=['POST'])
@@ -131,19 +190,28 @@ def delete_file():
         flash('File deleted successfully.')
     else:
         flash('File not found.', 'error')
-    return redirect(url_for('file_manager'))
+    return redirect(url_for('main.file_manager'))
 
 # ファイル編集処理（ファイル管理からホームへ遷移）
 @main.route('/edit-file', methods=['POST'])
 @login_required
 def edit_file():
     file_name = request.form.get('file_name')
-    return redirect(url_for('home', file=file_name))
+    return redirect(url_for('main.home', file=file_name))
 
 @main.route('/battle', methods=['GET'])
 @login_required
 def battle():
     return render_template('battle.html')
+
+def validate_password(password):
+    if len(password) < 8:
+        return "Password must be at least 8 characters long."
+    if not re.search(r"[A-Za-z]", password):
+        return "Password must contain at least one letter."
+    if not re.search(r"[0-9]", password):
+        return "Password must contain at least one number."
+    return None
 
 @main.route('/register', methods=['GET', 'POST'])
 def register():
@@ -163,6 +231,11 @@ def register():
         if existing_user:
             flash('Username already exists.')
             return redirect(url_for('main.register'))
+        
+        error = validate_password(password)
+        if error:
+            flash(error, "error")
+            return redirect(url_for("main.resister"))
         
         hashed_password = generate_password_hash(password)
         new_user = User(username=username, password=hashed_password)
