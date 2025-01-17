@@ -4,6 +4,7 @@ from flask_login import LoginManager
 from flask_socketio import SocketIO
 from flask_wtf.csrf import CSRFProtect
 import os, secrets
+from datetime import timedelta
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", secrets.token_hex(32))
@@ -14,6 +15,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SESSION_COOKIE_SECURE'] = True  # HTTPSを使用する場合
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # JavaScriptでアクセス不可
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # クロスサイトリクエストの制限
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=2)
+app.config['MAIL_SERVER'] = "" #
 
 csrf = CSRFProtect(app)
 db = SQLAlchemy(app)
