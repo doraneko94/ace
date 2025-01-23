@@ -1,6 +1,7 @@
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_mail import Mail
 from flask_socketio import SocketIO
 from flask_wtf.csrf import CSRFProtect
 import os, secrets
@@ -16,7 +17,15 @@ app.config['SESSION_COOKIE_SECURE'] = True  # HTTPSを使用する場合
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # JavaScriptでアクセス不可
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # クロスサイトリクエストの制限
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=2)
-app.config['MAIL_SERVER'] = "" #
+
+app.config['MAIL_SERVER'] = "smtp.lolipop.jp"
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'support@ushitora.net'
+app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")
+app.config['MAIL_DEFAULT_SENDER'] = 'support@ushitora.net'
+
+mail = Mail(app)
 
 csrf = CSRFProtect(app)
 db = SQLAlchemy(app)

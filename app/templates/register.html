@@ -9,6 +9,7 @@
     <div class="register-container">
         <h1 class="register-title">Register</h1>
         <form action="/register" method="POST" class="register-form">
+            {{ csrf_token() }}
             <div class="form-group">
                 <label for="username">Username</label>
                 <input
@@ -21,12 +22,21 @@
                     required>
             </div>
             <div class="form-group">
+                <label for="email">Email</label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Enter an Email"
+                    required>
+            </div>
+            <div class="form-group">
                 <label for="password">Password</label>
                 <input
                     type="password"
                     id="password"
                     name="password"
-                    placeholder="Enter a username"
+                    placeholder="Enter a password"
                     minlength="8"
                     maxlength="32"
                     title="Password must be 8-32 characters long."

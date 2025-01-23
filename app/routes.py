@@ -2,12 +2,14 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_login import login_user, logout_user, login_required, current_user
+from flask_mail import Message
 from flask_socketio import emit, join_room, leave_room, rooms
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.models import User
 from app.services import save_uploaded_file, start_session, run_battle
-from app import app, db, socketio
+from app.utils import confirm_token, generate_confirmation_token
+from app import app, db, mail, socketio
 import os, re, shutil
 
 main = Blueprint('main', __name__)
@@ -25,8 +27,12 @@ def login():
     user = User.query.filter_by(username=username).first()
 
     if user and check_password_hash(user.password, password):
-        login_user(user)
-        return redirect(url_for("main.home"))
+        if not user.is_confirmed:
+            flash('Please confirm your email address before logging in.', 'error')
+            return redirect(url_for('main.index'))
+        else:
+            login_user(user)
+            return redirect(url_for("main.home"))
     else:
         flash("Invalid username or password")
         return redirect(url_for("main.index"))
@@ -204,6 +210,13 @@ def edit_file():
 def battle():
     return render_template('battle.html')
 
+def validate_username(username):
+    if len(username) < 3 or len(username) > 20:
+        return 'Username must be between 3 and 20 characters.'
+    if not re.match("^[A-Za-z0-9_]+$", username):
+        return 'Username can only contain letters, numbers, and underscores.'
+    return None
+
 def validate_password(password):
     if len(password) < 8:
         return "Password must be at least 8 characters long."
@@ -213,34 +226,50 @@ def validate_password(password):
         return "Password must contain at least one number."
     return None
 
+def validate_email(email):
+    if not re.match(r'^[^@]+@[^@]+\.[^@]+$', email):
+        return 'Invalid email address.'
+    return None
+
 @main.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         username = request.form['username']
+        email = request.form['email']
         password = request.form['password']
+
+        if User.query.filter_by(email=email).first():
+            flash('This email is already registered.', 'error')
+            return redirect(url_for('main.register'))
 
         if not username or not password:
             flash('Username and Password are required.')
             return redirect(url_for('main.register'))
         
-        if not re.match(r'^[a-zA-Z0-9_]+$', username):
-            flash('Username must only contain letters, numbers, and underscores.')
-            return redirect(url_for('main.register'))
-        
         existing_user = User.query.filter_by(username=username).first()
         if existing_user:
-            flash('Username already exists.')
+            flash('Username already exists.', 'error')
             return redirect(url_for('main.register'))
         
-        error = validate_password(password)
-        if error:
-            flash(error, "error")
+        username_error = validate_username(username)
+        password_error = validate_password(password)
+        email_error = validate_email(email)
+        
+        if username_error or password_error or email_error:
+            flash(username_error or password_error or email_error, "error")
             return redirect(url_for("main.resister"))
         
         hashed_password = generate_password_hash(password)
-        new_user = User(username=username, password=hashed_password)
+        new_user = User(username=username, email=email, password=hashed_password, is_confirmed=False)
         db.session.add(new_user)
         db.session.commit()
+
+        token = generate_confirmation_token(email)
+        confirm_url = url_for('confirm_email', token=token, _external=True)
+        html = render_template('email_confirmation.html', confirm_url=confirm_url)
+
+        msg = Message('Confirm Your Email', recipients=[email], html=html)
+        mail.send(msg)
 
         user_folder = os.path.join("user_files", username)
         if not os.path.exists(user_folder):
@@ -249,10 +278,29 @@ def register():
             user_file = os.path.join(user_folder, "module.py")
             shutil.copy(default_file, user_file)
 
-        flash('User registered successfully. You can now log in.')
+        flash('A confirmation email has been sent. Please check your inbox.', 'info')
         return redirect(url_for('main.index'))
     
     return render_template('register.html')
+
+@main.route('/confirm/<token>')
+def confirm_email(token):
+    try:
+        email = confirm_token(token)
+    except:
+        flash('The confirmation link is invalid or has expired.', 'error')
+        return redirect(url_for("main.index"))
+    
+    user = User.query.filter_by(email=email).first_or_404()
+
+    if user.is_confirmed:
+        flash('Account already confirmed. Please log in.', 'info')
+    else:
+        user.is_confirmed = True
+        db.session.commit()
+        flash('You have confirmed your account. Thanks!', 'success')
+
+    return redirect(url_for('main.index'))
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() == 'py'
