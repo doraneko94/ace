@@ -1,7 +1,7 @@
 from enum import IntEnum
 from .consts import *
 from .utils import *
-import math, pygame
+import math
 
 class Unit(IntEnum):
     PYR = 0
