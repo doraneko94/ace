@@ -174,7 +174,7 @@ def upload_file():
         total_size = sum(os.path.getsize(os.path.join(user_folder, f)) for f in os.listdir(user_folder))
         if total_size + len(file.read()) > 5 * 1024 * 1024:  # 5MB制限
             flash('Total folder size exceeds 5MB. Upload failed.', 'error')
-            return redirect(url_for('file_manager'))
+            return redirect(url_for('main.file_manager'))
 
         file.seek(0)  # ファイルポインタを先頭に戻す
         file.save(os.path.join(user_folder, secure_filename(file.filename)))
@@ -257,7 +257,7 @@ def register():
         
         if username_error or password_error or email_error:
             flash(username_error or password_error or email_error, "error")
-            return redirect(url_for("main.resister"))
+            return redirect(url_for("main.register"))
         
         hashed_password = generate_password_hash(password)
         new_user = User(username=username, email=email, password=hashed_password, is_confirmed=False)
@@ -265,7 +265,7 @@ def register():
         db.session.commit()
 
         token = generate_confirmation_token(email)
-        confirm_url = url_for('confirm_email', token=token, _external=True)
+        confirm_url = url_for('main.confirm_email', token=token, _external=True)
         html = render_template('email_confirmation.html', confirm_url=confirm_url)
 
         msg = Message('Confirm Your Email', recipients=[email], html=html)
